@@ -11,9 +11,6 @@ export const INITIAL_USERS: User[] = Array.from({ length: 20 }).map((_, i) => ({
   status: Math.random() > 0.3 ? 'online' : 'offline',
 }));
 
-// Set User 1 as the default logged-in user for the demo
-INITIAL_USERS[0].isMe = true;
-
 export const INITIAL_GROUPS: Group[] = [
   {
     id: 'group-1',

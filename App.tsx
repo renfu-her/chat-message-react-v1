@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Theme, User, Group, ChatSession, Message, Attachment } from './types';
 import { INITIAL_USERS, INITIAL_GROUPS } from './constants';
@@ -6,12 +5,15 @@ import Sidebar from './components/Sidebar';
 import ChatWindow from './components/ChatWindow';
 import TopNav from './components/TopNav';
 import GroupManagement from './components/GroupManagement';
+import Login from './components/Login';
+import Register from './components/Register';
 import { GoogleGenAI } from "@google/genai";
 
 const App: React.FC = () => {
   const [theme, setTheme] = useState<Theme>('light');
-  const [currentUser] = useState<User>(INITIAL_USERS[0]);
-  const [users] = useState<User[]>(INITIAL_USERS);
+  const [authView, setAuthView] = useState<'login' | 'register' | 'chat'>('login');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [groups, setGroups] = useState<Group[]>(INITIAL_GROUPS);
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeTab, setActiveTab] = useState<'personal' | 'group'>('personal');
@@ -29,8 +31,31 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+    setAuthView('chat');
+  };
+
+  const handleRegister = (name: string) => {
+    const newUser: User = {
+      id: `user-${Date.now()}`,
+      name: name,
+      avatar: `https://picsum.photos/seed/${name}/200`,
+      status: 'online',
+    };
+    setUsers(prev => [...prev, newUser]);
+    setCurrentUser(newUser);
+    setAuthView('chat');
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setAuthView('login');
+    setActiveSession(null);
+  };
+
   const sendMessage = (text?: string, attachment?: Attachment) => {
-    if (!activeSession || (!text?.trim() && !attachment)) return;
+    if (!activeSession || !currentUser || (!text?.trim() && !attachment)) return;
 
     const isGroup = activeSession.type === 'group';
     
@@ -52,9 +77,12 @@ const App: React.FC = () => {
     }
   };
 
+  // Use the GoogleGenAI SDK to generate a response from the model.
   const triggerGeminiResponse = async (userMsg: string) => {
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+      if (!currentUser) return;
+      // Initialize with the API key directly from process.env as per rules.
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `Act as a user in a chat application. Reply briefly to: "${userMsg}"`,
@@ -64,6 +92,7 @@ const App: React.FC = () => {
         id: (Date.now() + 1).toString(),
         senderId: 'user-2',
         recipientId: currentUser.id,
+        // response.text is a property, not a method.
         text: response.text || 'Got it!',
         timestamp: Date.now(),
       };
@@ -74,6 +103,7 @@ const App: React.FC = () => {
   };
 
   const handleCreateGroup = (name: string, members: string[]) => {
+    if (!currentUser) return;
     const newGroup: Group = {
       id: `group-${Date.now()}`,
       name,
@@ -91,7 +121,7 @@ const App: React.FC = () => {
   };
 
   const filteredMessages = useMemo(() => {
-    if (!activeSession) return [];
+    if (!activeSession || !currentUser) return [];
     if (activeSession.type === 'group') {
       return messages.filter(m => m.groupId === activeSession.id);
     } else {
@@ -103,17 +133,27 @@ const App: React.FC = () => {
         )
       );
     }
-  }, [messages, activeSession, currentUser.id]);
+  }, [messages, activeSession, currentUser]);
 
   const activeGroup = activeSession?.type === 'group' 
     ? groups.find(g => g.id === activeSession.id) 
     : null;
 
-  const isDeniedFromGroup = activeGroup?.deniedMembers.includes(currentUser.id);
+  const isDeniedFromGroup = activeGroup?.deniedMembers.includes(currentUser?.id || '');
+
+  // Render Authentication Views
+  if (authView === 'login') {
+    return <Login users={users} onLogin={handleLogin} onGoToRegister={() => setAuthView('register')} />;
+  }
+  if (authView === 'register') {
+    return <Register onRegister={handleRegister} onGoToLogin={() => setAuthView('login')} />;
+  }
+
+  // Main Chat Application View
+  if (!currentUser) return null;
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-dark text-gray-900 dark:text-gray-100 transition-colors duration-200">
-      {/* Sidebar (Back to the Left) */}
       <Sidebar 
         users={users}
         groups={groups}
@@ -125,7 +165,6 @@ const App: React.FC = () => {
         onNewGroup={() => setIsManagingGroup(true)}
       />
 
-      {/* Main Content Area (Back to the Right) */}
       <div className="flex flex-col flex-1 relative overflow-hidden">
         <TopNav 
           theme={theme} 
@@ -134,6 +173,7 @@ const App: React.FC = () => {
           activeSession={activeSession}
           activeGroup={activeGroup}
           onManageGroup={() => setIsManagingGroup(true)}
+          onLogout={handleLogout}
         />
         
         <main className="flex-1 overflow-hidden relative">
@@ -156,7 +196,7 @@ const App: React.FC = () => {
             )
           ) : (
             <div className="h-full flex items-center justify-center p-8 text-center">
-              <div className="max-w-md">
+              <div className="max-w-md animate-in zoom-in duration-500">
                 <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
                   <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />

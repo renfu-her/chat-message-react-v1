@@ -1,20 +1,56 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Gemini Multi-Account Chat Pro 使用指南
 
-# Run and deploy your AI Studio app
+歡迎使用 **Gemini Multi-Account Chat Pro**！這是一款功能強大的聊天應用程式，支援個人私聊、群組聊天、成員權限管理以及 AI 互動功能。
 
-This contains everything you need to run your app locally.
+## 🚀 快速開始
 
-View your app in AI Studio: https://ai.studio/apps/drive/15ItPUSrQFmBTtY6NN8_GIa3_C3WOXEhs
+### 帳號資訊
+本系統預設提供 **20 個測試帳號**：
+- **帳號名稱**：User 1, User 2, ..., User 20
+- **登入密碼**：`user123` (所有帳號統一)
+- **預設登入**：進入頁面後，您將自動以 **User 1** 的身份進行操作。
 
-## Run Locally
+---
 
-**Prerequisites:**  Node.js
+## 🎨 核心功能
 
+### 1. 切換佈景主題 (Dark/Light Mode)
+在畫面的右上角點擊「月亮」或「太陽」圖示，即可即時切換**深色模式**或**淺色模式**。系統會自動記憶您的選擇。
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### 2. 個人私聊 (Personal Chat)
+- 在左側側邊欄選擇 **「Friends」** 標籤。
+- 點擊清單中的任何一位朋友即可開始對話。
+- **AI 互動**：對 **User 2** 發送訊息，他會透過 Google Gemini API 即時回覆您的問題。
+
+### 3. 群組聊天 (Group Chat)
+- 在左側側邊欄選擇 **「Groups」** 標籤。
+- 點擊現有的群組即可進入對話。
+- 群組訊息會對所有群組成員同步顯示。
+
+### 4. 建立與管理群組
+- **建立群組**：點擊 Groups 標籤旁的 `+` 按鈕。
+- **設定名稱**：自定義群組名稱，修改後所有成員皆可看到更新。
+- **成員選擇 (Allow)**：勾選清單中的使用者將其加入群組。
+- **拒絕名單 (Deny)**：在右側「Deny Access」清單中選擇使用者，被加入此名單的人將無法進入該群組，即使他們本來在成員名單中。
+- **修改群組**：進入群組後，點擊上方導覽列的群組資訊或「設定圖示」即可重新編輯。
+
+### 5. 檔案與圖片分享
+- 點擊對話框左側的「迴紋針」圖示，可以選擇並發送圖片或文件。
+- 圖片會直接在聊天視窗中預覽。
+- 文件檔案提供下載功能，並顯示檔案大小。
+
+---
+
+## 🛠 技術規格
+- **前端框架**：React 19 (ESM)
+- **樣式處理**：Tailwind CSS (支援響應式佈局)
+- **人工智慧**：Google GenAI (Gemini-3-Flash)
+- **介面優化**：自定義滾動條樣式，確保在淺色模式下不會出現黑色塊。
+
+## 💡 使用小貼士
+- **左右位置**：預設側邊欄在左側，若有特殊需求可要求開發者調整佈局。
+- **即時狀態**：使用者頭像旁的綠點代表該帳號目前正在線上。
+- **捲軸優化**：我們優化了 Light Mode 的捲軸顏色，現在呈現優雅的淺灰色。
+
+---
+*本程式由 Gemini AI 輔助開發，旨在提供極致的溝通體驗。*
