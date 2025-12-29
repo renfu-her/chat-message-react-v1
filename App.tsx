@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Theme, User, Group, ChatSession, Message, Attachment } from './types';
 import { INITIAL_USERS, INITIAL_GROUPS } from './constants';
@@ -36,10 +37,11 @@ const App: React.FC = () => {
     setAuthView('chat');
   };
 
-  const handleRegister = (name: string) => {
+  const handleRegister = (name: string, email: string) => {
     const newUser: User = {
       id: `user-${Date.now()}`,
       name: name,
+      email: email,
       avatar: `https://picsum.photos/seed/${name}/200`,
       status: 'online',
     };
@@ -77,11 +79,9 @@ const App: React.FC = () => {
     }
   };
 
-  // Use the GoogleGenAI SDK to generate a response from the model.
   const triggerGeminiResponse = async (userMsg: string) => {
     try {
       if (!currentUser) return;
-      // Initialize with the API key directly from process.env as per rules.
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -92,7 +92,6 @@ const App: React.FC = () => {
         id: (Date.now() + 1).toString(),
         senderId: 'user-2',
         recipientId: currentUser.id,
-        // response.text is a property, not a method.
         text: response.text || 'Got it!',
         timestamp: Date.now(),
       };
@@ -141,7 +140,6 @@ const App: React.FC = () => {
 
   const isDeniedFromGroup = activeGroup?.deniedMembers.includes(currentUser?.id || '');
 
-  // Render Authentication Views
   if (authView === 'login') {
     return <Login users={users} onLogin={handleLogin} onGoToRegister={() => setAuthView('register')} />;
   }
@@ -149,7 +147,6 @@ const App: React.FC = () => {
     return <Register onRegister={handleRegister} onGoToLogin={() => setAuthView('login')} />;
   }
 
-  // Main Chat Application View
   if (!currentUser) return null;
 
   return (

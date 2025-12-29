@@ -3,12 +3,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { User } from '../types';
 
 interface RegisterProps {
-  onRegister: (name: string) => void;
+  onRegister: (name: string, email: string) => void;
   onGoToLogin: () => void;
 }
 
 const Register: React.FC<RegisterProps> = ({ onRegister, onGoToLogin }) => {
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [captchaInput, setCaptchaInput] = useState('');
   const [captchaCode, setCaptchaCode] = useState('');
@@ -32,7 +33,6 @@ const Register: React.FC<RegisterProps> = ({ onRegister, onGoToLogin }) => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Background noise
     for (let i = 0; i < 50; i++) {
       ctx.fillStyle = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255},0.3)`;
       ctx.beginPath();
@@ -40,7 +40,6 @@ const Register: React.FC<RegisterProps> = ({ onRegister, onGoToLogin }) => {
       ctx.fill();
     }
 
-    // Noise lines
     for (let i = 0; i < 5; i++) {
       ctx.strokeStyle = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255},0.5)`;
       ctx.beginPath();
@@ -80,7 +79,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister, onGoToLogin }) => {
     e.preventDefault();
     setError('');
 
-    if (!name.trim() || !password || !captchaInput) {
+    if (!name.trim() || !email.trim() || !password || !captchaInput) {
       setError('Please fill in all fields.');
       return;
     }
@@ -97,7 +96,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister, onGoToLogin }) => {
       return;
     }
 
-    onRegister(name);
+    onRegister(name, email);
   };
 
   return (
@@ -110,17 +109,28 @@ const Register: React.FC<RegisterProps> = ({ onRegister, onGoToLogin }) => {
             </svg>
           </div>
           <h1 className="text-2xl font-bold dark:text-white">Create Account</h1>
-          <p className="text-gray-500 text-sm mt-1">Join the Gemini Chat community</p>
+          <p className="text-gray-500 text-sm mt-1">Join the Chat Message React community</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Username</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Full Name</label>
             <input 
               type="text" 
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. New User"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-transparent rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none text-sm dark:text-white transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Email Address</label>
+            <input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="e.g. user@example.com"
               className="w-full bg-gray-50 dark:bg-gray-800 border border-transparent rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none text-sm dark:text-white transition-all"
             />
           </div>
@@ -155,7 +165,6 @@ const Register: React.FC<RegisterProps> = ({ onRegister, onGoToLogin }) => {
                 <canvas ref={canvasRef} width="140" height="44" />
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1 italic">Click image to refresh. "0" and "O" are excluded.</p>
           </div>
 
           {error && <p className="text-red-500 text-xs font-medium text-center bg-red-50 dark:bg-red-900/20 py-2 rounded-lg">{error}</p>}

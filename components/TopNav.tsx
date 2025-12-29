@@ -41,7 +41,7 @@ const TopNav: React.FC<TopNavProps> = ({
             )}
           </>
         ) : (
-          <h2 className="font-bold text-lg text-primary">Gemini Chat</h2>
+          <h2 className="font-bold text-lg text-primary">Chat Message React</h2>
         )}
       </div>
 

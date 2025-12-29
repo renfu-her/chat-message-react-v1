@@ -7,6 +7,7 @@ export const MOCK_PASSWORD = 'user123';
 export const INITIAL_USERS: User[] = Array.from({ length: 20 }).map((_, i) => ({
   id: `user-${i + 1}`,
   name: `User ${i + 1}`,
+  email: `user${i + 1}@example.com`,
   avatar: `https://picsum.photos/seed/${i + 1}/200`,
   status: Math.random() > 0.3 ? 'online' : 'offline',
 }));

@@ -4,6 +4,7 @@ export type Theme = 'light' | 'dark';
 export interface User {
   id: string;
   name: string;
+  email: string; // Added email for login
   avatar: string;
   status: 'online' | 'offline';
   isMe?: boolean;
