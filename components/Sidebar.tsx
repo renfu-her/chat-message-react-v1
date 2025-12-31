@@ -13,16 +13,19 @@ interface SidebarProps {
   toggleTheme: () => void;
   onLogout: () => void;
   onOpenProfile: () => void;
+  friendIds: string[];
+  onAddFriend: (userId: string) => void;
+  onCloseMobile?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
   users, groups, activeSession, setActiveSession, currentUser, onNewGroup,
-  theme, toggleTheme, onLogout, onOpenProfile
+  theme, toggleTheme, onLogout, onOpenProfile, friendIds, onAddFriend, onCloseMobile
 }) => {
   const [expanded, setExpanded] = useState({
     friends: true,
     groups: true,
-    contacts: true
+    strangers: false
   });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -41,35 +44,26 @@ const Sidebar: React.FC<SidebarProps> = ({
     setExpanded(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  // Logic to categorize users
-  const friends = users.filter(u => {
-    const idNum = parseInt(u.id.replace('user-', ''));
-    return u.id !== currentUser.id && idNum >= 2 && idNum <= 5;
-  });
+  const friends = users.filter(u => u.id !== currentUser.id && friendIds.includes(u.id));
+  const strangers = users.filter(u => u.id !== currentUser.id && !friendIds.includes(u.id));
 
-  const contacts = users.filter(u => {
-    const idNum = parseInt(u.id.replace('user-', ''));
-    const isFriend = idNum >= 2 && idNum <= 5;
-    return u.id !== currentUser.id && !isFriend;
-  });
-
-  const renderUserItem = (user: User) => (
+  const renderFriendItem = (user: User) => (
     <button
       key={user.id}
       onClick={() => setActiveSession({ type: 'personal', id: user.id })}
-      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all mb-1 ${
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all mb-1 ${
         activeSession?.id === user.id 
           ? 'bg-primary text-white shadow-md shadow-primary/20' 
           : 'hover:bg-gray-100 dark:hover:bg-gray-800'
       }`}
     >
       <div className="relative flex-shrink-0">
-        <img src={user.avatar} className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700" alt="" />
+        <img src={user.avatar} className="w-9 h-9 rounded-full object-cover border border-gray-200 dark:border-gray-700" alt="" />
         {user.status === 'online' && (
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></span>
         )}
       </div>
-      <div className="flex-1 text-left">
+      <div className="flex-1 text-left min-w-0">
         <p className="text-sm font-semibold truncate">{user.name}</p>
         <p className={`text-[10px] ${activeSession?.id === user.id ? 'text-blue-100' : 'text-gray-500'} truncate`}>
           {user.status === 'online' ? 'Active now' : 'Offline'}
@@ -78,12 +72,33 @@ const Sidebar: React.FC<SidebarProps> = ({
     </button>
   );
 
+  const renderStrangerItem = (user: User) => (
+    <div
+      key={user.id}
+      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all mb-1 group"
+    >
+      <div className="relative flex-shrink-0 opacity-60">
+        <img src={user.avatar} className="w-9 h-9 rounded-full object-cover grayscale-[40%]" alt="" />
+      </div>
+      <div className="flex-1 text-left min-w-0">
+        <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 truncate">{user.name}</p>
+        <p className="text-[10px] text-gray-400 truncate">Stranger</p>
+      </div>
+      <button 
+        onClick={() => onAddFriend(user.id)}
+        className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-primary hover:bg-primary/10 transition-all scale-95"
+        title="Add Friend"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+      </button>
+    </div>
+  );
+
   return (
-    <aside className="w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-900 shadow-sm z-10 select-none">
+    <aside className="w-[85vw] sm:w-80 h-full border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-900 shadow-xl lg:shadow-none z-10 select-none">
       {/* Current User Header with Theme Toggle and Dropdown */}
       <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/30 relative" ref={dropdownRef}>
         <div className="flex items-center gap-3">
-          {/* Avatar and Menu Trigger */}
           <button 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-3 flex-1 min-w-0 group text-left"
@@ -92,9 +107,9 @@ const Sidebar: React.FC<SidebarProps> = ({
               <img 
                 src={currentUser.avatar} 
                 alt={currentUser.name} 
-                className="w-11 h-11 rounded-full border-2 border-primary object-cover transition-transform group-active:scale-95" 
+                className="w-10 h-10 lg:w-11 lg:h-11 rounded-2xl border-2 border-primary object-cover shadow-sm" 
               />
-              <span className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></span>
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
@@ -105,7 +120,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </button>
 
-          {/* Theme Toggle - Right of the info as requested */}
           <button 
             onClick={toggleTheme}
             className="p-2.5 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-500 transition-all active:scale-90"
@@ -117,9 +131,17 @@ const Sidebar: React.FC<SidebarProps> = ({
               <svg className="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" /></svg>
             )}
           </button>
+          
+          {onCloseMobile && (
+            <button 
+              onClick={onCloseMobile}
+              className="lg:hidden p-2 rounded-xl text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          )}
         </div>
 
-        {/* Account Dropdown Menu */}
         {isDropdownOpen && (
           <div className="absolute left-4 right-4 top-full mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 py-2 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden z-20">
             <button 
@@ -146,7 +168,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
-        {/* Friends Section */}
         <section>
           <button 
             onClick={() => toggleSection('friends')}
@@ -158,11 +179,10 @@ const Sidebar: React.FC<SidebarProps> = ({
             </span>
           </button>
           <div className={`overflow-hidden transition-all duration-300 ${expanded.friends ? 'max-h-[500px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
-            {friends.map(renderUserItem)}
+            {friends.map(renderFriendItem)}
           </div>
         </section>
 
-        {/* Groups Section */}
         <section>
           <div className="flex items-center justify-between group">
             <button 
@@ -194,7 +214,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center font-bold text-primary flex-shrink-0 group-hover:bg-white/20">
                   {group.name.charAt(0)}
                 </div>
-                <div className="flex-1 text-left">
+                <div className="flex-1 text-left min-w-0">
                   <p className="text-sm font-semibold truncate">{group.name}</p>
                   <p className={`text-[10px] ${activeSession?.id === group.id ? 'text-blue-100' : 'text-gray-500'} truncate`}>
                     {group.members.length} members
@@ -205,19 +225,18 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </section>
 
-        {/* Contacts Section */}
         <section>
           <button 
-            onClick={() => toggleSection('contacts')}
+            onClick={() => toggleSection('strangers')}
             className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest hover:text-primary transition-colors group"
           >
             <span className="flex items-center gap-2">
-              <svg className={`w-3 h-3 transition-transform duration-200 ${expanded.contacts ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-              Contacts ({contacts.length})
+              <svg className={`w-3 h-3 transition-transform duration-200 ${expanded.strangers ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+              Strangers ({strangers.length})
             </span>
           </button>
-          <div className={`overflow-hidden transition-all duration-300 ${expanded.contacts ? 'max-h-[1000px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
-            {contacts.map(renderUserItem)}
+          <div className={`overflow-hidden transition-all duration-300 ${expanded.strangers ? 'max-h-[1000px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+            {strangers.map(renderStrangerItem)}
           </div>
         </section>
       </div>

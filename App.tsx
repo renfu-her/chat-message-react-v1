@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Theme, User, Group, ChatSession, Message, Attachment } from './types';
 import { INITIAL_USERS, INITIAL_GROUPS } from './constants';
 import Sidebar from './components/Sidebar';
@@ -21,6 +21,10 @@ const App: React.FC = () => {
   const [activeSession, setActiveSession] = useState<ChatSession | null>(null);
   const [isManagingGroup, setIsManagingGroup] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  
+  // Track which users are "friends" (can be chatted with)
+  const [friendIds, setFriendIds] = useState<string[]>(['user-2', 'user-3', 'user-4', 'user-5', 'user-7']);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -62,6 +66,20 @@ const App: React.FC = () => {
     const updatedUser = { ...currentUser, ...updates };
     setCurrentUser(updatedUser);
     setUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
+  };
+
+  const handleAddFriend = (userId: string) => {
+    if (!friendIds.includes(userId)) {
+      setFriendIds(prev => [...prev, userId]);
+    }
+  };
+
+  const handleRemoveFriend = (userId: string) => {
+    setFriendIds(prev => prev.filter(id => id !== userId));
+    // Close session if the friend being removed is the active chat
+    if (activeSession?.type === 'personal' && activeSession.id === userId) {
+      setActiveSession(null);
+    }
   };
 
   const sendMessage = (text?: string, attachment?: Attachment) => {
@@ -121,6 +139,7 @@ const App: React.FC = () => {
     setGroups(prev => [...prev, newGroup]);
     setActiveSession({ type: 'group', id: newGroup.id });
     setIsManagingGroup(false);
+    setIsMobileSidebarOpen(false);
   };
 
   const updateGroup = (groupId: string, updates: Partial<Group>) => {
@@ -148,6 +167,11 @@ const App: React.FC = () => {
 
   const isDeniedFromGroup = activeGroup?.deniedMembers.includes(currentUser?.id || '');
 
+  const selectSession = useCallback((session: ChatSession) => {
+    setActiveSession(session);
+    setIsMobileSidebarOpen(false);
+  }, []);
+
   if (authView === 'login') {
     return <Login users={users} onLogin={handleLogin} onGoToRegister={() => setAuthView('register')} />;
   }
@@ -158,26 +182,47 @@ const App: React.FC = () => {
   if (!currentUser) return null;
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-dark text-gray-900 dark:text-gray-100 transition-colors duration-200">
-      <Sidebar 
-        users={users}
-        groups={groups}
-        activeSession={activeSession}
-        setActiveSession={setActiveSession}
-        currentUser={currentUser}
-        onNewGroup={() => setIsManagingGroup(true)}
-        theme={theme}
-        toggleTheme={toggleTheme}
-        onLogout={handleLogout}
-        onOpenProfile={() => setIsProfileOpen(true)}
-      />
+    <div className="flex h-screen bg-gray-50 dark:bg-dark text-gray-900 dark:text-gray-100 transition-colors duration-200 overflow-hidden">
+      {/* Sidebar - Responsive handling */}
+      <div className={`
+        fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
+        ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <Sidebar 
+          users={users}
+          groups={groups}
+          activeSession={activeSession}
+          setActiveSession={selectSession}
+          currentUser={currentUser}
+          onNewGroup={() => { setIsManagingGroup(true); setIsMobileSidebarOpen(false); }}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          onLogout={handleLogout}
+          onOpenProfile={() => setIsProfileOpen(true)}
+          friendIds={friendIds}
+          onAddFriend={handleAddFriend}
+          onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        />
+      </div>
 
-      <div className="flex flex-col flex-1 relative overflow-hidden">
+      {/* Overlay for mobile sidebar */}
+      {isMobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden animate-in fade-in duration-300"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
+      <div className="flex flex-col flex-1 relative overflow-hidden w-full">
         <TopNav 
           currentUser={currentUser}
           activeSession={activeSession}
           activeGroup={activeGroup}
           onManageGroup={() => setIsManagingGroup(true)}
+          friendIds={friendIds}
+          onRemoveFriend={handleRemoveFriend}
+          users={users}
+          onToggleSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
         
         <main className="flex-1 overflow-hidden relative">
@@ -203,14 +248,20 @@ const App: React.FC = () => {
             )
           ) : (
             <div className="h-full flex items-center justify-center p-8 text-center">
-              <div className="max-w-md animate-in zoom-in duration-500">
-                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
-                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="max-w-md animate-in zoom-in duration-500 px-4">
+                <div className="w-16 h-16 lg:w-20 lg:h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                  <svg className="w-10 h-10 lg:w-12 lg:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
                 <h2 className="text-xl font-semibold mb-2">Welcome, {currentUser.name}!</h2>
-                <p className="text-gray-500">Select a friend or a group from the sidebar to start chatting.</p>
+                <p className="text-gray-500 text-sm lg:text-base">Select a friend or a group from the sidebar to start chatting.</p>
+                <button 
+                  onClick={() => setIsMobileSidebarOpen(true)}
+                  className="mt-6 lg:hidden w-full py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20"
+                >
+                  Browse Contacts
+                </button>
               </div>
             </div>
           )}
@@ -221,6 +272,7 @@ const App: React.FC = () => {
         <GroupManagement 
           currentUser={currentUser}
           users={users}
+          friendIds={friendIds}
           editingGroup={activeGroup || undefined}
           onClose={() => setIsManagingGroup(false)}
           onCreate={handleCreateGroup}
