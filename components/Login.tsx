@@ -124,7 +124,7 @@ const Login: React.FC<LoginProps> = ({ users, onLogin, onGoToRegister }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. user1@example.com"
-              className="w-full bg-gray-50 dark:bg-gray-800 border border-transparent rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none text-sm dark:text-white transition-all"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-transparent rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none text-sm text-gray-900 dark:text-white transition-all"
             />
           </div>
 
@@ -135,7 +135,7 @@ const Login: React.FC<LoginProps> = ({ users, onLogin, onGoToRegister }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-gray-50 dark:bg-gray-800 border border-transparent rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none text-sm dark:text-white transition-all"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-transparent rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none text-sm text-gray-900 dark:text-white transition-all"
             />
           </div>
 
@@ -148,7 +148,7 @@ const Login: React.FC<LoginProps> = ({ users, onLogin, onGoToRegister }) => {
                 onChange={(e) => setCaptchaInput(e.target.value.toUpperCase())}
                 placeholder="6 Characters"
                 maxLength={6}
-                className="flex-1 bg-gray-50 dark:bg-gray-800 border border-transparent rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none text-sm dark:text-white transition-all font-mono uppercase"
+                className="flex-1 bg-gray-50 dark:bg-gray-800 border border-transparent rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none text-sm text-gray-900 dark:text-white transition-all font-mono uppercase"
               />
               <div 
                 onClick={generateCaptcha}
